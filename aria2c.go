@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 )
@@ -36,8 +37,16 @@ func NewClient(token string, jsonRpcUrl string) *Client {
 	return cli
 }
 
-func (cli *Client) DoRequest(method string, params []interface{}) (*http.Response, error) {
-	id := time.Now().UnixNano()
+// Result rpc result
+// {"id":"dmuITXlBkCRenRIr","jsonrpc":"2.0","result":"956724f4b4bad3b0"}
+type Result struct {
+	Id      string `json:"id,omitempty"`
+	Jsonrpc string `json:"jsonrpc,omitempty"`
+	Result  string `json:"result,omitempty"`
+}
+
+func (cli *Client) DoRequest(method string, params []interface{}) (*Result, error) {
+	id := RandString(16)
 	token := fmt.Sprintf("token:%s", cli.token)
 	paramArr := []interface{}{
 		token,
@@ -52,7 +61,17 @@ func (cli *Client) DoRequest(method string, params []interface{}) (*http.Respons
 		"params":  paramArr,
 	}
 	bys, _ := json.Marshal(data)
-	return cli.httpClient.Post(cli.jsonRpcUrl, "application/json", bytes.NewReader(bys))
+	resp, err := cli.httpClient.Post(cli.jsonRpcUrl, "application/json", bytes.NewReader(bys))
+	if err != nil {
+		return nil, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	res := &Result{}
+	err = json.Unmarshal(body, res)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
 // AddDownload add download task
@@ -64,14 +83,14 @@ func (cli *Client) DoRequest(method string, params []interface{}) (*http.Respons
 //	   "params": [
 //	       "token:tokenString",
 //	       [
-//	           "http://m.gettywallpapers.com/wp-content/uploads/2020/01/Wallpaper-Naruto-2.jpg"
+//	           "https://github.com/fengjx/java-hot-reload-agent/releases/download/hot-reload-agent-all-1.1.0/hot-reload-agent-bin.zip"
 //	       ],
 //	       {
-//	           "out": "test.jpg"
+//	           "dir": "/path/to/dir"
 //	       }
 //	   ]
 //	}
-func (cli *Client) AddDownload(url string, opt *Options) (*http.Response, error) {
+func (cli *Client) AddDownload(url string, opt *Options) (*Result, error) {
 	params := []interface{}{
 		[]string{url},
 		opt,

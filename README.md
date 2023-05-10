@@ -1,5 +1,22 @@
 # aria2go
+
 aria2 go client
+
+## usage
+
+install
+
+```bash
+go get github.com/fengjx/aria2go
+```
+
+```go
+aria2Cli := aria2go.NewClient("1024", "http://localhost:6800/jsonrpc")
+opt := &Options{
+    Dir: "/path/to/download/dir",
+}
+resp, err := aria2Cli.AddDownload("https://github.com/fengjx/java-hot-reload-agent/releases/download/hot-reload-agent-all-1.1.0/hot-reload-agent-bin.zip", opt)
+```
 
 ## doc
 

@@ -1,6 +1,8 @@
 package aria2go
 
-import "testing"
+import (
+	"testing"
+)
 
 var testCli = NewClient("1024", "http://localhost:6800/jsonrpc")
 
@@ -12,5 +14,5 @@ func TestAddDownload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Logf(resp.Status)
+	t.Log(resp)
 }
